@@ -270,6 +270,57 @@ h1 {
   box-shadow: 0 0 0 3px rgba(189, 139, 59, 0.14);
 }
 
+.sticker-field {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.sticker-field legend {
+  color: var(--muted);
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.sticker-picker {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(74px, 1fr));
+  gap: 10px;
+}
+
+.sticker-button {
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  justify-items: center;
+  min-height: 74px;
+  border: 1px solid rgba(91, 72, 50, 0.18);
+  border-radius: 8px;
+  color: var(--muted);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 245, 239, 0.9));
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.sticker-button span {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.sticker-button small {
+  font-size: 0.82rem;
+}
+
+.sticker-button.is-selected {
+  border-color: rgba(189, 139, 59, 0.72);
+  color: var(--ink);
+  background: linear-gradient(180deg, #fffdf8, #ffece8);
+  box-shadow: 0 0 0 3px rgba(239, 157, 161, 0.2);
+}
+
 .form-actions {
   display: flex;
   flex-wrap: wrap;
@@ -339,6 +390,7 @@ h1 {
 }
 
 .message-card {
+  position: relative;
   min-height: 132px;
   padding: 16px;
   border: 1px solid rgba(91, 72, 50, 0.14);
@@ -346,6 +398,20 @@ h1 {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 247, 240, 0.84)),
     radial-gradient(circle at top right, rgba(184, 217, 232, 0.24), transparent 7rem);
+}
+
+.message-sticker {
+  float: right;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-left: 12px;
+  border: 1px solid rgba(189, 139, 59, 0.18);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.78);
+  font-size: 1.55rem;
+  box-shadow: 0 8px 22px rgba(72, 49, 35, 0.08);
 }
 
 .message-card p {
@@ -410,6 +476,7 @@ h1 {
   }
 
   .gift-row,
+  .sticker-picker,
   .message-form,
   .messages-grid {
     grid-template-columns: 1fr;
@@ -486,6 +553,35 @@ h1 {
             <span>祝福語</span>
             <textarea id="messageInput" name="message" maxlength="90" rows="3" placeholder="寫下祝福..." required></textarea>
           </label>
+          <fieldset class="sticker-field" aria-label="選擇表情包">
+            <legend>表情包</legend>
+            <div class="sticker-picker" id="stickerPicker">
+              <button class="sticker-button is-selected" type="button" data-sticker="💝" aria-pressed="true">
+                <span aria-hidden="true">💝</span>
+                <small>甜蜜</small>
+              </button>
+              <button class="sticker-button" type="button" data-sticker="🥰" aria-pressed="false">
+                <span aria-hidden="true">🥰</span>
+                <small>開心</small>
+              </button>
+              <button class="sticker-button" type="button" data-sticker="🎉" aria-pressed="false">
+                <span aria-hidden="true">🎉</span>
+                <small>祝福</small>
+              </button>
+              <button class="sticker-button" type="button" data-sticker="💍" aria-pressed="false">
+                <span aria-hidden="true">💍</span>
+                <small>圓滿</small>
+              </button>
+              <button class="sticker-button" type="button" data-sticker="💕" aria-pressed="false">
+                <span aria-hidden="true">💕</span>
+                <small>相愛</small>
+              </button>
+              <button class="sticker-button" type="button" data-sticker="✨" aria-pressed="false">
+                <span aria-hidden="true">✨</span>
+                <small>閃亮</small>
+              </button>
+            </div>
+          </fieldset>
           <div class="form-actions">
             <button class="primary-button" type="submit">送出祝福</button>
             <button class="ghost-button" id="exportButton" type="button">匯出祝福</button>
@@ -511,8 +607,11 @@ h1 {
   var exportButton = document.getElementById("exportButton");
   var importInput = document.getElementById("importInput");
   var shareOutput = document.getElementById("shareOutput");
+  var stickerPicker = document.getElementById("stickerPicker");
+  var stickerButtons = stickerPicker.querySelectorAll(".sticker-button");
   var submitButton = messageForm.querySelector(".primary-button");
   var editIndex = -1;
+  var selectedSticker = "💝";
   var cancelEditButton = document.createElement("button");
 
   cancelEditButton.className = "ghost-button";
@@ -524,13 +623,19 @@ h1 {
   var seedMessages = [
     {
       name: "總務科全體同仁",
+      sticker: "🎉",
       text: "祝泓豪新婚快樂，往後每一天都有棉被的溫暖，也有烤箱剛出爐的甜香。"
     },
     {
       name: "大家",
+      sticker: "💕",
       text: "願你們把日子過成最喜歡的樣子，互相照顧、互相珍惜，幸福一輩子。"
     }
   ];
+
+  function isValidSticker(sticker) {
+    return ["💝", "🥰", "🎉", "💍", "💕", "✨"].indexOf(sticker) >= 0;
+  }
 
   function encodeMessages(messages) {
     return btoa(unescape(encodeURIComponent(JSON.stringify(messages))));
@@ -555,6 +660,7 @@ h1 {
       .map(function (item) {
         return {
           name: String(item.name || "匿名祝福").trim().slice(0, 16),
+          sticker: isValidSticker(item.sticker) ? item.sticker : "",
           text: String(item.text).trim().slice(0, 90)
         };
       });
@@ -599,6 +705,14 @@ h1 {
       var card = document.createElement("article");
       card.className = "message-card";
 
+      if (message.sticker) {
+        var sticker = document.createElement("div");
+        sticker.className = "message-sticker";
+        sticker.textContent = message.sticker;
+        sticker.setAttribute("aria-label", "祝福表情包");
+        card.appendChild(sticker);
+      }
+
       var text = document.createElement("p");
       text.textContent = message.text;
 
@@ -626,6 +740,7 @@ h1 {
     editIndex = -1;
     submitButton.textContent = "送出祝福";
     cancelEditButton.hidden = true;
+    setSelectedSticker("💝");
   }
 
   function clearForm() {
@@ -641,6 +756,7 @@ h1 {
     editIndex = index;
     nameInput.value = message.name || "";
     messageInput.value = message.text || "";
+    setSelectedSticker(message.sticker || "💝");
     submitButton.textContent = "儲存修正";
     cancelEditButton.hidden = false;
     shareOutput.textContent = "正在修正一則祝福。";
@@ -664,8 +780,24 @@ h1 {
     textarea.select();
   }
 
+  function setSelectedSticker(sticker) {
+    selectedSticker = isValidSticker(sticker) ? sticker : "💝";
+    stickerButtons.forEach(function (button) {
+      var isSelected = button.dataset.sticker === selectedSticker;
+      button.classList.toggle("is-selected", isSelected);
+      button.setAttribute("aria-pressed", String(isSelected));
+    });
+  }
+
   var messages = loadMessages();
   renderMessages(messages);
+
+  stickerPicker.addEventListener("click", function (event) {
+    var button = event.target.closest(".sticker-button");
+    if (!button) return;
+
+    setSelectedSticker(button.dataset.sticker);
+  });
 
   messageForm.addEventListener("submit", function (event) {
     event.preventDefault();
@@ -675,6 +807,7 @@ h1 {
 
     var nextMessage = {
       name: nameInput.value.trim() || "匿名祝福",
+      sticker: selectedSticker,
       text: text
     };
 
