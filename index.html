@@ -789,6 +789,24 @@ h1 {
     });
   }
 
+  function insertStickerIntoMessage(sticker) {
+    if (!isValidSticker(sticker)) return;
+
+    var start = messageInput.selectionStart || messageInput.value.length;
+    var end = messageInput.selectionEnd || messageInput.value.length;
+    var nextValue = messageInput.value.slice(0, start) + sticker + messageInput.value.slice(end);
+
+    if (nextValue.length > Number(messageInput.maxLength)) {
+      shareOutput.textContent = "祝福語已達字數上限，無法再加入表情包。";
+      messageInput.focus();
+      return;
+    }
+
+    messageInput.value = nextValue;
+    messageInput.focus();
+    messageInput.setSelectionRange(start + sticker.length, start + sticker.length);
+  }
+
   var messages = loadMessages();
   renderMessages(messages);
 
@@ -797,6 +815,7 @@ h1 {
     if (!button) return;
 
     setSelectedSticker(button.dataset.sticker);
+    insertStickerIntoMessage(button.dataset.sticker);
   });
 
   messageForm.addEventListener("submit", function (event) {
